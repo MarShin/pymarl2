@@ -10,10 +10,13 @@ import sys
 import torch as th
 from utils.logging import get_logger
 import yaml
+import wandb
 
 from run import REGISTRY as run_REGISTRY
 
-SETTINGS['CAPTURE_MODE'] = "fd" # set to "no" if you want to see stdout/stderr in console
+SETTINGS[
+    "CAPTURE_MODE"
+] = "fd"  # set to "no" if you want to see stdout/stderr in console
 logger = get_logger()
 
 ex = Experiment("pymarl")
@@ -29,10 +32,26 @@ def my_main(_run, _config, _log):
     config = config_copy(_config)
     np.random.seed(config["seed"])
     th.manual_seed(config["seed"])
-    config['env_args']['seed'] = config["seed"]
-    
+    config["env_args"]["seed"] = config["seed"]
+
+    print("inside my_main")
+    print(_run, config, _log)
+
+    # init wandb
+    run = wandb.init(
+        config=config,
+        project="StarCraft2",
+        name=config["name"],
+        group=config["env_args"]["map_name"],
+        job_type="training",
+        # reinit=True
+    )
+
     # run
-    run_REGISTRY[_config['run']](_run, config, _log)
+    run_REGISTRY[_config["run"]](_run, config, _log)
+
+    run.finish()
+
 
 def _get_config(params, arg_name, subfolder):
     config_name = None
@@ -43,7 +62,15 @@ def _get_config(params, arg_name, subfolder):
             break
 
     if config_name is not None:
-        with open(os.path.join(os.path.dirname(__file__), "config", subfolder, "{}.yaml".format(config_name)), "r") as f:
+        with open(
+            os.path.join(
+                os.path.dirname(__file__),
+                "config",
+                subfolder,
+                "{}.yaml".format(config_name),
+            ),
+            "r",
+        ) as f:
             try:
                 config_dict = yaml.load(f)
             except yaml.YAMLError as exc:
@@ -73,16 +100,18 @@ def parse_command(params, key, default):
     result = default
     for _i, _v in enumerate(params):
         if _v.split("=")[0].strip() == key:
-            result = _v[_v.index('=')+1:].strip()
+            result = _v[_v.index("=") + 1 :].strip()
             break
     return result
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     params = deepcopy(sys.argv)
 
     # Get the defaults from default.yaml
-    with open(os.path.join(os.path.dirname(__file__), "config", "default.yaml"), "r") as f:
+    with open(
+        os.path.join(os.path.dirname(__file__), "config", "default.yaml"), "r"
+    ) as f:
         try:
             config_dict = yaml.load(f)
         except yaml.YAMLError as exc:
@@ -99,12 +128,15 @@ if __name__ == '__main__':
     ex.add_config(config_dict)
 
     # Save to disk by default for sacred
-    map_name = parse_command(params, "env_args.map_name", config_dict['env_args']['map_name'])
-    algo_name = parse_command(params, "name", config_dict['name']) 
+    map_name = parse_command(
+        params, "env_args.map_name", config_dict["env_args"]["map_name"]
+    )
+    algo_name = parse_command(params, "name", config_dict["name"])
     file_obs_path = join(results_path, "sacred", map_name, algo_name)
-    
+
     logger.info("Saving to FileStorageObserver in {}.".format(file_obs_path))
     ex.observers.append(FileStorageObserver.create(file_obs_path))
+    print(params)
 
     ex.run_commandline(params)
 
