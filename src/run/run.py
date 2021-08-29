@@ -17,10 +17,12 @@ from components.transforms import OneHot
 
 from smac.env import StarCraft2Env
 
+
 def get_agent_own_state_size(env_args):
     sc_env = StarCraft2Env(**env_args)
     # qatten parameter setting (only use in qatten)
-    return  4 + sc_env.shield_bits_ally + sc_env.unit_type_bits
+    return 4 + sc_env.shield_bits_ally + sc_env.unit_type_bits
+
 
 def run(_run, _config, _log):
 
@@ -34,16 +36,18 @@ def run(_run, _config, _log):
     logger = Logger(_log)
 
     _log.info("Experiment Parameters:")
-    experiment_params = pprint.pformat(_config,
-                                       indent=4,
-                                       width=1)
+    experiment_params = pprint.pformat(_config, indent=4, width=1)
     _log.info("\n\n" + experiment_params + "\n")
 
     # configure tensorboard logger
-    unique_token = "{}__{}".format(args.name, datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+    unique_token = "{}__{}".format(
+        args.name, datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    )
     args.unique_token = unique_token
     if args.use_tensorboard:
-        tb_logs_direc = os.path.join(dirname(dirname(abspath(__file__))), "results", "tb_logs")
+        tb_logs_direc = os.path.join(
+            dirname(dirname(abspath(__file__))), "results", "tb_logs"
+        )
         tb_exp_direc = os.path.join(tb_logs_direc, "{}").format(unique_token)
         logger.setup_tb(tb_exp_direc)
 
@@ -79,6 +83,7 @@ def evaluate_sequential(args, runner):
 
     runner.close_env()
 
+
 def run_sequential(args, logger):
 
     # Init runner so we can get env info
@@ -90,7 +95,7 @@ def run_sequential(args, logger):
     args.n_actions = env_info["n_actions"]
     args.state_shape = env_info["state_shape"]
 
-    if getattr(args, 'agent_own_state_size', False):
+    if getattr(args, "agent_own_state_size", False):
         args.agent_own_state_size = get_agent_own_state_size(args.env_args)
 
     # Default/Base scheme
@@ -98,21 +103,31 @@ def run_sequential(args, logger):
         "state": {"vshape": env_info["state_shape"]},
         "obs": {"vshape": env_info["obs_shape"], "group": "agents"},
         "actions": {"vshape": (1,), "group": "agents", "dtype": th.long},
-        "avail_actions": {"vshape": (env_info["n_actions"],), "group": "agents", "dtype": th.int},
-        "probs": {"vshape": (env_info["n_actions"],), "group": "agents", "dtype": th.float},
+        "avail_actions": {
+            "vshape": (env_info["n_actions"],),
+            "group": "agents",
+            "dtype": th.int,
+        },
+        "probs": {
+            "vshape": (env_info["n_actions"],),
+            "group": "agents",
+            "dtype": th.float,
+        },
         "reward": {"vshape": (1,)},
         "terminated": {"vshape": (1,), "dtype": th.uint8},
     }
-    groups = {
-        "agents": args.n_agents
-    }
-    preprocess = {
-        "actions": ("actions_onehot", [OneHot(out_dim=args.n_actions)])
-    }
+    groups = {"agents": args.n_agents}
+    preprocess = {"actions": ("actions_onehot", [OneHot(out_dim=args.n_actions)])}
 
-    buffer = ReplayBuffer(scheme, groups, args.buffer_size, env_info["episode_limit"] + 1,
-                          preprocess=preprocess,
-                          device="cpu" if args.buffer_cpu_only else args.device)
+    # TODO: replicate this part
+    buffer = ReplayBuffer(
+        scheme,
+        groups,
+        args.buffer_size,
+        env_info["episode_limit"] + 1,
+        preprocess=preprocess,
+        device="cpu" if args.buffer_cpu_only else args.device,
+    )
     # Setup multiagent controller here
     mac = mac_REGISTRY[args.mac](buffer.scheme, groups, args)
 
@@ -131,7 +146,9 @@ def run_sequential(args, logger):
         timestep_to_load = 0
 
         if not os.path.isdir(args.checkpoint_path):
-            logger.console_logger.info("Checkpoint directiory {} doesn't exist".format(args.checkpoint_path))
+            logger.console_logger.info(
+                "Checkpoint directiory {} doesn't exist".format(args.checkpoint_path)
+            )
             return
 
         # Go through all files in args.checkpoint_path
@@ -194,19 +211,30 @@ def run_sequential(args, logger):
         n_test_runs = max(1, args.test_nepisode // runner.batch_size)
         if (runner.t_env - last_test_T) / args.test_interval >= 1.0:
 
-            logger.console_logger.info("t_env: {} / {}".format(runner.t_env, args.t_max))
-            logger.console_logger.info("Estimated time left: {}. Time passed: {}".format(
-                time_left(last_time, last_test_T, runner.t_env, args.t_max), time_str(time.time() - start_time)))
+            logger.console_logger.info(
+                "t_env: {} / {}".format(runner.t_env, args.t_max)
+            )
+            logger.console_logger.info(
+                "Estimated time left: {}. Time passed: {}".format(
+                    time_left(last_time, last_test_T, runner.t_env, args.t_max),
+                    time_str(time.time() - start_time),
+                )
+            )
             last_time = time.time()
 
             last_test_T = runner.t_env
             for _ in range(n_test_runs):
                 runner.run(test_mode=True)
 
-        if args.save_model and (runner.t_env - model_save_time >= args.save_model_interval or model_save_time == 0):
+        if args.save_model and (
+            runner.t_env - model_save_time >= args.save_model_interval
+            or model_save_time == 0
+        ):
             model_save_time = runner.t_env
-            save_path = os.path.join(args.local_results_path, "models", args.unique_token, str(runner.t_env))
-            #"results/models/{}".format(unique_token)
+            save_path = os.path.join(
+                args.local_results_path, "models", args.unique_token, str(runner.t_env)
+            )
+            # "results/models/{}".format(unique_token)
             os.makedirs(save_path, exist_ok=True)
             logger.console_logger.info("Saving models to {}".format(save_path))
 
@@ -231,11 +259,15 @@ def args_sanity_check(config, _log):
     # config["use_cuda"] = True # Use cuda whenever possible!
     if config["use_cuda"] and not th.cuda.is_available():
         config["use_cuda"] = False
-        _log.warning("CUDA flag use_cuda was switched OFF automatically because no CUDA devices are available!")
+        _log.warning(
+            "CUDA flag use_cuda was switched OFF automatically because no CUDA devices are available!"
+        )
 
     if config["test_nepisode"] < config["batch_size_run"]:
         config["test_nepisode"] = config["batch_size_run"]
     else:
-        config["test_nepisode"] = (config["test_nepisode"]//config["batch_size_run"]) * config["batch_size_run"]
+        config["test_nepisode"] = (
+            config["test_nepisode"] // config["batch_size_run"]
+        ) * config["batch_size_run"]
 
     return config
