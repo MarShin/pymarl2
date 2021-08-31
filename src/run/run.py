@@ -189,10 +189,10 @@ def run_sequential(args, logger):
     while runner.t_env <= args.t_max:
 
         # Run for a whole episode at a time
-
-        with th.no_grad():
-            episode_batch = runner.run(test_mode=False)
-            buffer.insert_episode_batch(episode_batch)
+        # TODO: really no grad when runner collecting episodes?
+        # with th.no_grad():
+        episode_batch = runner.run(test_mode=False)
+        buffer.insert_episode_batch(episode_batch)
 
         if buffer.can_sample(args.batch_size):
             episode_sample = buffer.sample(args.batch_size)
