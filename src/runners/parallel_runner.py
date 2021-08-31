@@ -42,6 +42,7 @@ class ParallelRunner:
 
         self.t_env = 0
 
+        # train returns & stats not used
         self.train_returns = []
         self.test_returns = []
         self.train_stats = {}
@@ -213,6 +214,7 @@ class ParallelRunner:
         if not test_mode:
             self.t_env += self.env_steps_this_run
 
+        # TODO: make sure log these in wandb
         # Get stats back for each env
         for parent_conn in self.parent_conns:
             parent_conn.send(("get_stats", None))
@@ -243,6 +245,7 @@ class ParallelRunner:
         if test_mode and (len(self.test_returns) == n_test_runs):
             self._log(cur_returns, cur_stats, log_prefix)
         elif self.t_env - self.log_train_stats_t >= self.args.runner_log_interval:
+            # logging empty as not assigned anywhere
             self._log(cur_returns, cur_stats, log_prefix)
             if hasattr(self.mac.action_selector, "epsilon"):
                 self.logger.log_stat(
