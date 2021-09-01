@@ -4,7 +4,7 @@ from components.action_selectors import REGISTRY as action_REGISTRY
 from components.episode_buffer import EpisodeBatch
 
 # This multi-agent controller shares parameters between agents
-class basicMAC:
+class BasicMAC:
     def __init__(self, scheme, groups, args):
         self.n_agents = args.n_agents
         self.args = args
@@ -42,9 +42,7 @@ class basicMAC:
         if self.agent_output_type == "pi_logits":
             if getattr(self.args, "marks_before_softmax", True):
                 # make the logits for unavailble actions very negative to minimie their affect on the softmax
-                agent_outs = agent_outs.reshape(
-                    ep_batch.batch_size * self.n_agents, -1
-                )
+                agent_outs = agent_outs.reshape(ep_batch.batch_size * self.n_agents, -1)
                 reshaped_avail_actions = avail_actions.reshape(
                     ep_batch.batch_size * self.n_agents, -1
                 )
