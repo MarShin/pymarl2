@@ -10,9 +10,11 @@ from .dmaq_qatten_learner import DMAQ_qattenLearner
 from .offpg_learner import OffPGLearner
 from .maven_learner import MAVENLearner
 from .fmac_learner import FMACLearner
+from .vannila_q_learner import VanillaQLearner
 
 REGISTRY = {}
 
+REGISTRY["vanilla_q_learner"] = VanillaQLearner
 REGISTRY["q_learner"] = QLearner
 REGISTRY["coma_learner"] = COMALearner
 REGISTRY["qtran_learner"] = QTranLearner

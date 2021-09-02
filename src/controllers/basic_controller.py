@@ -24,7 +24,7 @@ class BasicMAC:
         t_env: int,
         bs=slice(None),
         test_mode=False,
-    ) -> th.Categorical:
+    ) -> th.distributions.Categorical:
         # Only select actions for the selected batch elements in bs
         avail_actions = ep_batch["avail_actions"][:, t_ep]
         agent_outputs = self.forward(ep_batch, t_ep, test_mode=test_mode)
@@ -83,7 +83,7 @@ class BasicMAC:
         bs = batch.batch_size
         inputs = []
         inputs.append(batch["obs"][:, t])
-        if self.args.obs_last_actions:
+        if self.args.obs_last_action:
             if t == 0:
                 inputs.append(th.zeros_like(batch["actions_onehot"][:, t]))
             else:

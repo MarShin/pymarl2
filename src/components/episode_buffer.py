@@ -241,10 +241,17 @@ class EpisodeBatch:
     def max_t_filled(self):
         return th.sum(self.data.transition_data["filled"], 1).max(0)[0]
 
+    def format_data_size(self, data):
+        string = ""
+        for k, v in data.items():
+            string += f"{k}, {v.size()}\n"
+        return string
+
     def __repr__(self):
-        return "EpisodeBatch. Batch Size:{} Max_seq_len:{} Keys:{} Groups:{}".format(
-            self.batch_size, self.max_seq_length, self.scheme.keys(), self.groups.keys()
-        )
+        return f"EpisodeBatch. Batch Size:{self.batch_size} Max_seq_len:{self.max_seq_length} Keys:{self.scheme.keys()} Groups:{self.groups.keys()}"
+
+    def __str__(self):
+        return f"EpisodeBatch. Batch Size:{self.batch_size} Max_seq_len:{self.max_seq_length} Keys:{self.scheme.keys()} Groups:{self.groups.keys()} \n Episode Data: {self.data.episode_data} \n Transition Data: {self.format_data_size(self.data.transition_data)}"
 
 
 class ReplayBuffer(EpisodeBatch):
@@ -287,6 +294,7 @@ class ReplayBuffer(EpisodeBatch):
     def can_sample(self, batch_size):
         return self.episodes_in_buffer >= batch_size
 
+    # TODO: PER
     def sample(self, batch_size):
         assert self.can_sample(batch_size)
         if self.episodes_in_buffer == batch_size:

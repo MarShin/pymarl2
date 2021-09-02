@@ -9,7 +9,8 @@ epsilon_anneal_time: 100000 # 500000 for 6h_vs_8z
 runner: "parallel"
 batch_size_run: 2 #8 # batch_size_run=4, buffer_size = 2500, batch_size=64  for 3s5z_vs_3s6z
 buffer_size: 5000
-batch_size: 128
+# batch_size: 128
+batch_size: 10
 
 t_max: 10050000
 
@@ -17,11 +18,12 @@ t_max: 10050000
 target_update_interval: 200
 
 # use the Q_Learner to train
-mac: "mac"
+# mac: "n_mac"
+mac: "basic_mac"
 agent: "rnn"
 agent_output_type: q
-learner: "vanilla_q_learner"
-# learner: "nq_learner"
+learner: "nq_learner"
+# learner: "vanilla_q_learner"
 mixer: "qmix"
 mixing_embed_dim: 32
 hypernet_embed: 64

@@ -110,6 +110,7 @@ class NQLearner:
         masked_td_error = td_error * mask
         loss = L_td = masked_td_error.sum() / mask.sum()
 
+        ###############
         # Optimise
         self.optimiser.zero_grad()
         loss.backward()
