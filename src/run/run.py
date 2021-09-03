@@ -196,13 +196,13 @@ def run_sequential(args, logger):
 
         if buffer.can_sample(args.batch_size):
             episode_sample = buffer.sample(args.batch_size)
-            print("episode_sample")
-            print(episode_sample)
+            # print("episode_sample")
+            # print(episode_sample)
 
             # Truncate batch to only filled timesteps
             max_ep_t = episode_sample.max_t_filled()
-            print("max_ep_t")
-            print(max_ep_t)
+            # print("max_ep_t")
+            # print(max_ep_t)
             episode_sample = episode_sample[:, :max_ep_t]
 
             if episode_sample.device != args.device:

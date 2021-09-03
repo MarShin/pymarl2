@@ -41,7 +41,7 @@ class BasicMAC:
         # Softmax the agent outputs if tehy're policy logits
         if self.agent_output_type == "pi_logits":
             if getattr(self.args, "marks_before_softmax", True):
-                # make the logits for unavailble actions very negative to minimie their affect on the softmax
+                # make the logits for unavailble actions very negative to minimise their affect on the softmax
                 agent_outs = agent_outs.reshape(ep_batch.batch_size * self.n_agents, -1)
                 reshaped_avail_actions = avail_actions.reshape(
                     ep_batch.batch_size * self.n_agents, -1

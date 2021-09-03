@@ -22,7 +22,7 @@ target_update_interval: 200
 mac: "basic_mac"
 agent: "rnn"
 agent_output_type: q
-learner: "nq_learner"
+learner: "q_learner"
 # learner: "vanilla_q_learner"
 mixer: "qmix"
 mixing_embed_dim: 32
